@@ -78,7 +78,7 @@ cm<-confusionMatrix(pr, xValidData$classe)
 cm
 ```
 
-As shown in the confusionMatrix, the prediction accuracy is quite high > 99 % for all class and out of sample error of `r 1 - cm$overall[1]`
+As shown in the confusionMatrix, the prediction accuracy is quite high > 99 % for all class and out of sample error rate of **`r (1 - cm$overall[1]) * 100`%**
 
 ### Appendix: Code and Figures
 
