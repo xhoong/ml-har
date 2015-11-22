@@ -1,0 +1,114 @@
+---
+title: "Practical ML - Human Activity Recognition"
+author: '@xhoong'
+date: "November 21, 2015"
+output: 
+  html_document: 
+    fig_caption: yes
+---
+
+### Overview
+
+This analysis is based on data set from http://groupware.les.inf.puc-rio.br/har, the goal is to derive a classification machine learning model based on the training set with 5 identified way of exercise using the dumbell, the 5 different class as stated below from the website:
+
+```
+exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).
+```
+
+Read more: http://groupware.les.inf.puc-rio.br/har#ixzz3sBeAbBbZ
+
+The training data set will be partition to 2 for cross-validation, and use the test set as validation set. The estimated prediction error should be less than 1%. 
+
+### Downloading datasets and prepping train and test sets
+```{r ref.label=c('load-data'), echo=FALSE}
+```
+```{r get-data, cache=TRUE}
+pmlTraining<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+fileTrain<-"pml-training.csv"
+loadData(pmlTraining, fileTrain)
+pmlTesting<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+fileTest<-"pml-testing.csv"
+loadData(pmlTesting, fileTest)
+
+trainingSet <- read.csv(fileTrain, stringsAsFactors = F, na.strings = c("", "NA"))
+trainingSet$classe <- as.factor(trainingSet$classe)
+testSet <- read.csv(fileTest, stringsAsFactors = F, na.strings = c("", "NA"))
+```
+
+### Cleaning Data and Train data partitions
+
+Removing columns with `NA` and non-feature columns 1 to 7 (`r paste(names(trainingSet[1,1:7]), collapse=', ')`)
+
+```{r clean-data, message=F}
+features <- names(trainingSet[,colSums(is.na(trainingSet))==0])[8:59]
+trainingSet <- trainingSet[, c(features, "classe")]
+testSet <- testSet[,c(features, "problem_id")]
+
+```
+
+```{r drop-hiCor, message=F}
+require(caret)
+hiCorCol <- findCorrelation(cor(trainingSet[,-c(which(names(trainingSet)=="classe"))]))
+hiCorColNames <- names(trainingSet[,hiCorCol])
+trainingSet <- trainingSet[, -c(hiCorCol)]
+testSet <- testSet[, -c(hiCorCol)]
+
+set.seed(112215)
+trainRow<-createDataPartition(trainingSet$classe, p=0.75, list=F)
+trainData<- trainingSet[trainRow,]
+xValidData<- trainingSet[-trainRow,]
+```
+
+The removed high correlation features from the sets are *`r paste(hiCorColNames, collapse=', ')`*
+
+### Machine Learning with Classification model
+
+Using Random Forest classification model, eventhou the training is slow, but the prediction accuracy is high as shown later in cross validation using 25% of data set from the training data.
+
+```{r ml-model, cache=T}
+trainCntr <- trainControl("oob")
+rfMd <- train(classe ~ ., trainData, method = "rf", ntree=200, importance=T, trControl=trainCntr)
+```
+
+Predict the data from cross validation data (xValidData) and show the accuracy
+
+```{r xValid}
+pr<-predict(rfMd, xValidData)
+cm<-confusionMatrix(pr, xValidData$classe)
+cm
+```
+
+As shown in the confusionMatrix, the prediction accuracy is quite high > 99 % for all class and out of sample error of `r 1 - cm$overall[1]`
+
+### Appendix: Code and Figures
+
+Data downloading routine
+```{r load-data}
+loadData<-function(url, filename) {
+  if (!file.exists(filename))
+    download.file(url, fileName, method="curl")
+
+  if (!file.exists(filename))
+      stop(filename, " not found")
+}
+
+```
+
+Submission routine for answers
+```{r submit, eval=F}
+# Predict the class of the validation set
+answer<-predict(rfMd, testSet)
+answer
+
+# code as suggested by Coursera
+pml_write_files = function(x){
+    n = length(x)
+    for(i in 1:n){
+        filename = paste0("problem_id_",i,".txt")
+        write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+    }
+}
+
+pml_write_files(answer)
+```
+
