@@ -95,7 +95,7 @@ testSet &lt;- read.csv(fileTest, stringsAsFactors = F, na.strings = c(&quot;&quo
 trainingSet &lt;- trainingSet[, c(features, &quot;classe&quot;)]
 testSet &lt;- testSet[,c(features, &quot;problem_id&quot;)]</code></pre>
 <pre class="r"><code>require(caret)
-hiCorCol &lt;- findCorrelation(cor(trainingSet[,-c(which(names(trainingSet)==&quot;classe&quot;))]))
+hiCorCol &lt;- findCorrelation(cor(trainingSet[,-c(which(names(trainingSet)==&quot;classe&quot;))]), cutoff = 0.9)
 hiCorColNames &lt;- names(trainingSet[,hiCorCol])
 trainingSet &lt;- trainingSet[, -c(hiCorCol)]
 testSet &lt;- testSet[, -c(hiCorCol)]

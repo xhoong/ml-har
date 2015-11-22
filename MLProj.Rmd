@@ -48,7 +48,7 @@ testSet <- testSet[,c(features, "problem_id")]
 
 ```{r drop-hiCor, message=F}
 require(caret)
-hiCorCol <- findCorrelation(cor(trainingSet[,-c(which(names(trainingSet)=="classe"))]))
+hiCorCol <- findCorrelation(cor(trainingSet[,-c(which(names(trainingSet)=="classe"))]), cutoff = 0.9)
 hiCorColNames <- names(trainingSet[,hiCorCol])
 trainingSet <- trainingSet[, -c(hiCorCol)]
 testSet <- testSet[, -c(hiCorCol)]
