@@ -65,14 +65,14 @@ The removed high correlation features from the sets are *`r paste(hiCorColNames,
 
 Using Random Forest classification model, eventhou the training is slow, but the prediction accuracy is high as shown later in cross validation using 25% of data set from the training data.
 
-```{r ml-model, cache=T}
+```{r ml-model, cache=T, message=F}
 trainCntr <- trainControl("oob")
 rfMd <- train(classe ~ ., trainData, method = "rf", ntree=200, importance=T, trControl=trainCntr)
 ```
 
 Predict the data from cross validation data (xValidData) and show the accuracy
 
-```{r xValid}
+```{r xValid, message=F}
 pr<-predict(rfMd, xValidData)
 cm<-confusionMatrix(pr, xValidData$classe)
 cm
